@@ -256,7 +256,74 @@ text(-0.13, 0.24, "(b) Gymnosperms", font = 2, pos = 4, xpd = T, cex = 1.5)
 
 legend('topright', c("1932","1956", "1980"), lty = 1, col = col.gs, horiz = F, bty = "n", lwd = 2.5)
 dev.off()
- 
+
+
+#### Fig4 ###########
+
+# # we want this fig:
+# dotplot(ranef(mod.gstp, condVar = T), strip = T, scales = list(relation='free'))$species
+
+model = mod.gstp 
+re <- ranef(mod.gstp, condVar = T)$species
+re$phylum <- taxo$phylum[match(rownames(re), taxo$species)]
+ranvar <- attr(re, "postVar")
+# If you’re willing to assume independence of the conditional variance and the fixed-effect
+# sampling variance, then the variance of the intercepts for each group would be the sum
+# of the fixed-effect intercept variance and the conditional variance of the intercept for each group:
+vcov(model)[1,1]+ranvar[1,1,1]  # for the first group
+
+vcov(model)[2,2]+ranvar[2,2,1]  # this would be for the slopes in the first group
+# ranvar is the variance-covariance matrix of the random effects
+# vcov(model) is the variance-covariance matrix of the fixed effects
+int.var <- c()
+slope.var <- c()
+for (i in 1:nrow(re)) {
+  int.var <- c(int.var, ranvar[1,1,i]) #  [1,1] is the variance of the the intercept
+  slope.var <- c(slope.var, ranvar[2,2,i]) # [2,2] is the variance of the the slope
+}
+
+re$int.se <- 1.96*sqrt(int.var) 
+re$slope.se <- 1.96*sqrt(slope.var) 
+
+### get the CIs
+re$int.se.final <- re$int.se
+re$slope.se.final <- re$slope.se
+names(re)[which(names(re) == "(Intercept)")] <- "intercept"
+re$int.lo <- re$intercept - re$int.se.final
+re$int.up <- re$intercept + re$int.se.final 
+re$slope.lo <- re$suitability.m1915 - re$slope.se.final 
+re$slope.up <- re$suitability.m1915 + re$slope.se.final
+
+# intercept
+pdf(paste0(path.to.results, "fig4.pdf"), width = 10, height = 8)
+par(oma = rep(0,4), mfrow = c(1,2))
+re <- re[order(re$intercept),]
+par(mar = c(4, 10, 1, 0.1))
+plot(0:nrow(re), 0:nrow(re), xlim = c(min(re$int.lo), max(re$int.up)), pch = NA, yaxt = "n", xaxt = "n",
+     ylab = "", xlab = "", ylim = c(1, nrow(re)))
+abline(h = 1:nrow(re), lty = 1, col = "grey90")
+abline(v = 0, lty = 1, col = "grey80")
+points(re$intercept, 1:nrow(re), pch = ifelse(re$phylum == "Angiosperm", 15, 17), cex = 1.5)
+segments(x0 = re$int.lo, x1 = re$int.up, y0 = 1:nrow(re), lwd = 1.5)
+axis(1, at = seq(-0.4, 0.4, 0.2),  line = 0, las  = 1, cex = 1.1)
+axis(2, at = 1:nrow(re),  line = 0, las  = 1, cex = 1.1, labels = rownames(re), font = 3)
+mtext(side = 1, "Intercept", line = 2.6, cex = 1.3)
+# slope
+par(mar = c(4, 0.1, 1, 10))
+plot(0:nrow(re), 0:nrow(re), xlim = c(min(re$slope.lo), max(re$slope.up)), pch = NA, yaxt = "n", xaxt = "n",
+     ylab = "", xlab = "", ylim = c(1, nrow(re)))
+abline(h = 1:nrow(re), lty = 1, col = "grey90")
+abline(v = 0, lty = 1, col = "grey80")
+points(re$suitability.m1915, 1:nrow(re), pch = ifelse(re$phylum == "Angiosperm", 15, 17), cex = 1.5)
+segments(x0 = re$slope.lo, x1 = re$slope.up, y0 = 1:nrow(re), lwd = 1.5)
+axis(1, at = seq(-0.4, 0.4, 0.1),  line = 0, las  = 1, cex = 1.1)
+# axis(2, at = 1:nrow(re),  line = 0, las  = 1, cex = 1.1, labels = rownames(re), font = 3)
+mtext(side = 1, "Climate suitability (slope)", line = 2.6, cex = 1.3)
+
+dev.off()
+
+
+
 ###################################################################
 ############################ END ##################################
 ###################################################################
