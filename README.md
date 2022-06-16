@@ -5,7 +5,7 @@ Bernal-Escobar, M., Zuleta, D. and Feeley, K.J. (2022), Changes in the climate s
 
 **Steps & file description:** 
 
-(1) Download most updated data: This article is entirely based on published data that are available for free and public download; no new data was used in this study. See: Data availability statement section in the paper. 
+(1) Download the most updated data: This article is entirely based on published data that are available for free and public download; no new data was used in this study. See: Data availability statement section in the paper. 
 
 (2) run "get_distribution_models.R" to fit distribution models for each species .
 
